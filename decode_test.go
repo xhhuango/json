@@ -2572,3 +2572,20 @@ func TestUnmarshalMaxDepth(t *testing.T) {
 		}
 	}
 }
+
+func TestUnmarshalNaNAndInf(t *testing.T) {
+	type T struct {
+		N  float64
+		IP float64
+		IN float64
+	}
+	data := []byte(`{"N":NaN,"IP":+Inf,"IN":-Inf}`)
+	var s T
+	err := Unmarshal(data, &s)
+	if err != nil {
+		t.Fatalf("Unmarshal: %v", err)
+	}
+	if !math.IsNaN(s.N) || !math.IsInf(s.IP, 1) || !math.IsInf(s.IN, -1) {
+		t.Fatalf("after Unmarshal, s.N=%f, s.IP=%f, s.IN=%f, want NaN, +Inf, -Inf", s.N, s.IP, s.IN)
+	}
+}

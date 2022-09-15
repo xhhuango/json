@@ -223,9 +223,6 @@ func TestSliceNoCycle(t *testing.T) {
 }
 
 var unsupportedValues = []any{
-	math.NaN(),
-	math.Inf(-1),
-	math.Inf(1),
 	pointerCycle,
 	pointerCycleIndirect,
 	mapCycle,
@@ -1199,5 +1196,25 @@ func TestMarshalerError(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("MarshalerError test %d, got: %s, want: %s", i, got, tt.want)
 		}
+	}
+}
+
+func TestMarshalNaNAndInf(t *testing.T) {
+	s := struct {
+		N  float64
+		IP float64
+		IN float64
+	}{
+		N:  math.NaN(),
+		IP: math.Inf(1),
+		IN: math.Inf(-1),
+	}
+	got, err := Marshal(s)
+	if err != nil {
+		t.Errorf("Marshal() error: %v", err)
+	}
+	want := `{"N":NaN,"IP":+Inf,"IN":-Inf}`
+	if string(got) != want {
+		t.Errorf("Marshal() = %s, want %s", got, want)
 	}
 }

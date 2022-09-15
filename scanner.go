@@ -226,6 +226,9 @@ func stateBeginValue(s *scanner, c byte) int {
 	case '"':
 		s.step = stateInString
 		return scanBeginLiteral
+	case '+':
+		s.step = statePos
+		return scanBeginLiteral
 	case '-':
 		s.step = stateNeg
 		return scanBeginLiteral
@@ -240,6 +243,9 @@ func stateBeginValue(s *scanner, c byte) int {
 		return scanBeginLiteral
 	case 'n': // beginning of null
 		s.step = stateN
+		return scanBeginLiteral
+	case 'N': // beginning of NaN
+		s.step = stateNaN
 		return scanBeginLiteral
 	}
 	if '1' <= c && c <= '9' { // beginning of 1234.5
@@ -402,6 +408,23 @@ func stateInStringEscU123(s *scanner, c byte) int {
 	return s.error(c, "in \\u hexadecimal character escape")
 }
 
+// statePos is the state after reading `+` during a number.
+func statePos(s *scanner, c byte) int {
+	if c == '0' {
+		s.step = state0
+		return scanContinue
+	}
+	if '1' <= c && c <= '9' {
+		s.step = state1
+		return scanContinue
+	}
+	if c == 'I' {
+		s.step = stateI
+		return scanContinue
+	}
+	return s.error(c, "in numeric literal")
+}
+
 // stateNeg is the state after reading `-` during a number.
 func stateNeg(s *scanner, c byte) int {
 	if c == '0' {
@@ -412,7 +435,29 @@ func stateNeg(s *scanner, c byte) int {
 		s.step = state1
 		return scanContinue
 	}
+	if c == 'I' {
+		s.step = stateI
+		return scanContinue
+	}
 	return s.error(c, "in numeric literal")
+}
+
+// stateI is the state after reading `+I` or `-I`.
+func stateI(s *scanner, c byte) int {
+	if c == 'n' {
+		s.step = stateIn
+		return scanContinue
+	}
+	return s.error(c, "in literal +Inf or -Inf (expecting `n`)")
+}
+
+// stateIn is the state after reading `+In` or `-In`.
+func stateIn(s *scanner, c byte) int {
+	if c == 'f' {
+		s.step = stateEndValue
+		return scanContinue
+	}
+	return s.error(c, "in literal +Inf or -Inf (expecting `f`)")
 }
 
 // state1 is the state after reading a non-zero integer during a number,
@@ -489,6 +534,24 @@ func stateE0(s *scanner, c byte) int {
 		return scanContinue
 	}
 	return stateEndValue(s, c)
+}
+
+// stateNaN is the state after reading `N`.
+func stateNaN(s *scanner, c byte) int  {
+	if c == 'a' {
+		s.step = stateNaN0
+		return scanContinue
+	}
+	return s.error(c, "in literal NaN (expecting 'a')")
+}
+
+// stateNaN0 is the state after reading `Na`.
+func stateNaN0(s *scanner, c byte) int {
+	if c == 'N' {
+		s.step = stateEndValue
+		return scanContinue
+	}
+	return s.error(c, "in literal NaN (expecting 'N')")
 }
 
 // stateT is the state after reading `t`.

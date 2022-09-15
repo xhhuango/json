@@ -364,6 +364,8 @@ type encOpts struct {
 	quoted bool
 	// escapeHTML causes '<', '>', and '&' to be escaped in JSON strings.
 	escapeHTML bool
+	allowNaN   bool
+	allowInf   bool
 }
 
 type encoderFunc func(e *encodeState, v reflect.Value, opts encOpts)
@@ -573,8 +575,28 @@ type floatEncoder int // number of bits
 
 func (bits floatEncoder) encode(e *encodeState, v reflect.Value, opts encOpts) {
 	f := v.Float()
-	if math.IsInf(f, 0) || math.IsNaN(f) {
-		e.error(&UnsupportedValueError{v, strconv.FormatFloat(f, 'g', -1, int(bits))})
+	if math.IsInf(f, 0) {
+		if opts.quoted {
+			e.WriteByte('"')
+		}
+		if math.IsInf(f, 1) {
+			e.WriteString("+Inf")
+		} else {
+			e.WriteString("-Inf")
+		}
+		if opts.quoted {
+			e.WriteByte('"')
+		}
+		return
+	} else if math.IsNaN(f) {
+		if opts.quoted {
+			e.WriteByte('"')
+		}
+		e.WriteString("NaN")
+		if opts.quoted {
+			e.WriteByte('"')
+		}
+		return
 	}
 
 	// Convert as if by ES6 number to string conversion.

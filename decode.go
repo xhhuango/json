@@ -327,15 +327,21 @@ Switch:
 				break Switch
 			}
 		}
-	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-': // number
-		for ; i < len(data); i++ {
-			switch data[i] {
-			case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-				'.', 'e', 'E', '+', '-':
-			default:
-				break Switch
+	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '+': // number
+		if (data[i-1] == '+' || data[i-1] == '-') && data[i] == 'I' {
+			i += len("Inf")
+		} else {
+			for ; i < len(data); i++ {
+				switch data[i] {
+				case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+					'.', 'e', 'E', '+', '-':
+				default:
+					break Switch
+				}
 			}
 		}
+	case 'N': // NaN
+		i += len("aN")
 	case 't': // true
 		i += len("rue")
 	case 'f': // false
@@ -974,7 +980,7 @@ func (d *decodeState) literalStore(item []byte, v reflect.Value, fromQuoted bool
 		}
 
 	default: // number
-		if c != '-' && (c < '0' || c > '9') {
+		if c != '-' && c != '+' && (c < '0' || c > '9') && c != 'N' {
 			if fromQuoted {
 				return fmt.Errorf("json: invalid use of ,string struct tag, trying to unmarshal %q into %v", item, v.Type())
 			}
