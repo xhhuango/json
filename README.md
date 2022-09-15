@@ -1,6 +1,12 @@
-# JSON with NaN, +Inf, and -Inf Supported for Golang
+# JSON with NaN, +Inf, and -Inf Supported for Golang 
+[![Go Report Card](https://goreportcard.com/badge/github.com/d-tsuji/awesome-go-orms)](https://goreportcard.com/report/github.com/xhhuango/json)
+[![Actions Status](https://github.com/d-tsuji/awesome-go-orms/workflows/CI/badge.svg)](https://github.com/xhhuango/json/actions)
+[![BSD-style license](https://img.shields.io/badge/license-BSD--style-brightgreen.svg)](https://opensource.org/licenses/MIT)
+[![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white)](https://pkg.go.dev/github.com/xhhuango/json)
 
-A Fork from Go SDK encoding/json 1.19 with NaN, +Inf, and -Inf Supported.
+A Fork from Go SDK encoding/json with NaN, +Inf, and -Inf Supported.
+
+The release version of this package matches Go SDK version it forks from.
 
 # Features
 
